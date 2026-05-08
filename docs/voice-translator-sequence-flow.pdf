@@ -1,0 +1,153 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 2585 >>
+stream
+BT
+/F1 10 Tf
+48 744 Td
+(VoiceTranslate Sequence Flow) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Systems involved:) Tj
+0 -14 Td
+(- User) Tj
+0 -14 Td
+(- Browser / React Frontend) Tj
+0 -14 Td
+(- Microphone or File Upload) Tj
+0 -14 Td
+(- FastAPI Backend) Tj
+0 -14 Td
+(- Local Temporary Storage) Tj
+0 -14 Td
+(- Guardrail Service) Tj
+0 -14 Td
+(- OpenAI Speech-to-Text) Tj
+0 -14 Td
+(- Audio Analysis Service) Tj
+0 -14 Td
+(- OpenAI Translation LLM) Tj
+0 -14 Td
+(- ElevenLabs Text-to-Speech) Tj
+0 -14 Td
+(- Media Endpoint) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Sequence:) Tj
+0 -14 Td
+(1. User opens the VoiceTranslate app in the browser.) Tj
+0 -14 Td
+(2. React frontend calls FastAPI: GET /api/health.) Tj
+0 -14 Td
+(3. User grants microphone permission or uploads an audio file.) Tj
+0 -14 Td
+(4. Browser captures English speech as an audio blob.) Tj
+0 -14 Td
+(5. User confirms voice consent and submits the request.) Tj
+0 -14 Td
+(6. Frontend sends multipart form data to POST /api/translate/voice.) Tj
+0 -14 Td
+(7. FastAPI creates a request ID and validates consent.) Tj
+0 -14 Td
+(8. Backend saves the uploaded audio in temporary local storage.) Tj
+0 -14 Td
+(9. Audio validation checks file format and size.) Tj
+0 -14 Td
+(10. OpenAI STT transcribes the English audio.) Tj
+0 -14 Td
+(11. Guardrails check content safety and impersonation risk.) Tj
+0 -14 Td
+(12. Audio analysis extracts pitch, energy, pace, pauses, and mood.) Tj
+0 -14 Td
+(13. OpenAI LLM translates the transcript into natural spoken Hindi.) Tj
+0 -14 Td
+(14. Guardrails check PII and collect warnings.) Tj
+0 -14 Td
+(15. ElevenLabs generates Hindi speech using the configured voice ID.) Tj
+0 -14 Td
+(16. Backend saves the generated audio temporarily.) Tj
+0 -14 Td
+(17. Backend returns JSON with transcript, translation, mood profile, guardrails, and audio U) Tj
+0 -14 Td
+(RL.) Tj
+0 -14 Td
+(18. Browser loads the generated audio through the media endpoint.) Tj
+0 -14 Td
+(19. User plays or downloads the translated Hindi audio.) Tj
+0 -14 Td
+() Tj
+0 -14 Td
+(Compact sequence diagram:) Tj
+0 -14 Td
+(User -> Browser: Open app) Tj
+0 -14 Td
+(Browser -> FastAPI: GET /api/health) Tj
+0 -14 Td
+(User -> Browser: Grant mic / upload audio) Tj
+0 -14 Td
+(Browser -> FastAPI: POST /api/translate/voice) Tj
+0 -14 Td
+(FastAPI -> Guardrails: Consent check) Tj
+0 -14 Td
+(FastAPI -> Storage: Save uploaded audio) Tj
+0 -14 Td
+(FastAPI -> OpenAI STT: Transcribe audio) Tj
+0 -14 Td
+(FastAPI -> Guardrails: Safety + impersonation checks) Tj
+0 -14 Td
+(FastAPI -> Audio Analysis: Detect mood and voice features) Tj
+0 -14 Td
+(FastAPI -> OpenAI LLM: Translate English to Hindi) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 306 >>
+stream
+BT
+/F1 10 Tf
+48 744 Td
+(FastAPI -> ElevenLabs: Generate Hindi cloned voice audio) Tj
+0 -14 Td
+(FastAPI -> Storage: Save generated MP3) Tj
+0 -14 Td
+(FastAPI -> Browser: Return result + audio URL) Tj
+0 -14 Td
+(Browser -> Media Endpoint: Load audio) Tj
+0 -14 Td
+(User -> Browser: Play or download audio) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [ 3 0 R 5 0 R ] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002716 00000 n 
+0000002842 00000 n 
+0000003199 00000 n 
+0000003325 00000 n 
+0000003390 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+3439
+%%EOF
