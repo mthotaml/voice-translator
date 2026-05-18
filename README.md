@@ -1,6 +1,113 @@
+# Pure Green Hyperlocal Video Studio
+
+This repository now includes a working mock-first MVP for the **Pure Green Hyperlocal AI Video Marketing App** described in `../pure-green-build-spec.md`.
+
+The app lets a local wellness brand create a campaign, upload store/neighborhood/product media, generate deterministic media analysis, produce a campaign brief, storyboard, captions, CTA, compliance-safe script, demo narration, social caption, and a downloadable render package. The current renderer is a placeholder manifest designed to be swapped for Remotion MP4 rendering.
+
+## Pure Green MVP Flow
+
+```text
+Campaign setup
+    |
+    v
+Media upload
+    |
+    v
+Mock media analysis
+    |
+    v
+Campaign brief + storyboard
+    |
+    v
+Health-claim compliance rewrite
+    |
+    v
+ElevenLabs narration or local demo audio fallback
+    |
+    v
+Template preview + downloadable render package
+```
+
+## Pure Green Quick Start
+
+Backend:
+
+```bash
+cd /Users/mohan/Documents/New\ project/voice-translator/backend
+PYTHONPATH=. ./.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Frontend:
+
+```bash
+cd /Users/mohan/Documents/New\ project/voice-translator/frontend
+npm run dev -- --port 5173
+```
+
+If `5173` is busy, Vite will choose the next available port. Open the URL printed by Vite.
+
+## Pure Green API
+
+- `POST /api/campaigns`
+- `POST /api/campaigns/{id}/assets`
+- `POST /api/campaigns/{id}/analyze`
+- `POST /api/campaigns/{id}/storyboard`
+- `POST /api/campaigns/{id}/compliance`
+- `POST /api/campaigns/{id}/narration`
+- `POST /api/campaigns/{id}/render`
+- `GET /api/campaigns/{id}`
+- `GET /api/campaigns/{id}/download`
+- `GET /api/music`
+
+The compliance service rewrites unsupported health claims such as immunity, disease, guaranteed recovery, longevity, organic, non-GMO, gluten-free, zero-sugar, and similar unverified claims into safer lifestyle-oriented language.
+
+## Approved Music Library
+
+Put owned or properly licensed MP3 tracks in:
+
+```bash
+backend/media/music/
+```
+
+Then update:
+
+```bash
+backend/data/music_catalog.json
+```
+
+Each track should include an ID, title, file URL, energy, BPM, mood tags, license note, and volume settings:
+
+```json
+{
+  "id": "energetic_wellness_pop",
+  "title": "Energetic Wellness Pop",
+  "file": "/media/music/energetic-wellness-pop.mp3",
+  "energy": "high",
+  "bpm": 118,
+  "mood": ["fitness", "upbeat", "post-workout"],
+  "license": "owned_or_licensed",
+  "defaultVolume": 0.11,
+  "duckedVolume": 0.035
+}
+```
+
+The campaign generator automatically picks a track by visual/audience energy and mixes it quietly under narration in the browser preview export. Keep `duckedVolume` around `0.02-0.04` so music does not dominate the voiceover.
+
+## Verification
+
+```bash
+cd backend
+PYTHONPATH=. ./.venv/bin/pytest app/tests
+
+cd ../frontend
+npm run build
+```
+
+---
+
 # VoiceTranslate
 
-VoiceTranslate is an emotion-preserving English to Hindi voice translator. It records English speech in the browser, transcribes it, estimates vocal mood and cadence, translates the content into natural spoken Hindi, and generates Hindi audio through a cloned voice provider.
+VoiceTranslate is an emotion-preserving English to Hindi voice translator. It records English speech in the browser, transcribes it, estimates vocal mood and cadence, translates the content into natural spoken Hindi, and generates Hindi audio through a cloned voice provider. Each speaker can use their own selected voice ID or enroll voice samples to create a new cloned voice.
 
 The MVP is consent-first and demo-friendly: `DEMO_MODE=true` lets you test the complete browser flow without OpenAI or ElevenLabs keys.
 
@@ -124,11 +231,25 @@ The response includes transcript, Hindi translation, mood confidence, voice prof
 
 `POST /api/voices/enroll`
 
-MVP demo endpoint that validates consent and returns a demo voice ID. Production enrollment should call the ElevenLabs voice API and store consent records.
+Enrolls a speaker voice. In demo mode, it validates consent and returns a demo voice ID. In real mode, it sends the uploaded samples to ElevenLabs Instant Voice Cloning and returns the new `voice_id`.
+
+Multipart form fields:
+
+- `voice_name`: label for this speaker voice
+- `audio_samples`: one or more clean audio files
+- `description`: optional voice description
+- `consent_confirmed`: required boolean
+
+The returned `voice_id` can be selected in the frontend and is passed into `/api/translate/voice` for that speaker's generated Hindi audio.
+
+`GET /api/voices`
+
+Returns saved local speaker profiles from SQLite. The frontend uses this to show the **Saved speaker profiles** dropdown. The local database stores speaker labels, provider, `voice_id`, consent status, and timestamps, but not raw voice sample audio.
 
 ## Guardrails
 
 - Consent is required before voice generation.
+- Consent is required before voice enrollment or cloning.
 - Unsafe content and likely fraud or impersonation scripts are blocked.
 - PII is warned about but not blocked.
 - Low-quality audio returns warnings.

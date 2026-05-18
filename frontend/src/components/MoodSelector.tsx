@@ -22,7 +22,7 @@ const moods = [
 export default function MoodSelector({ value, onChange }: Props) {
   return (
     <label className="field">
-      <span>Mood</span>
+      <span>Mood override</span>
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         {moods.map(([id, label]) => (
           <option key={id} value={id}>{label}</option>

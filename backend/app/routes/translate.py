@@ -14,8 +14,30 @@ from app.services.storage import LocalStorage
 from app.services.stt_provider import DemoSTTProvider
 from app.services.translation_provider import DemoTranslationProvider
 from app.services.tts_provider import DemoTTSProvider
+from app.services.voice_profile_store import VoiceProfileStore
 
 router = APIRouter(prefix="/api/translate", tags=["translate"])
+
+MOOD_ALIASES = {
+    "joy": "joyful",
+    "education": "educational",
+    "teach": "instructional",
+}
+
+SUPPORTED_MOODS = {
+    "normal",
+    "happy",
+    "joyful",
+    "excited",
+    "angry",
+    "sad",
+    "calm",
+    "serious",
+    "instructional",
+    "educational",
+    "persuasive",
+    "urgent",
+}
 
 
 def error_response(request_id: str, status_code: int, reason: str, message: str, guardrails=None):
@@ -46,6 +68,16 @@ async def translate_voice(
     storage = LocalStorage(settings)
     guardrails = GuardrailService(settings)
     analyzer = AudioAnalyzer(settings)
+    selected_voice_id = (voice_id or settings.elevenlabs_voice_id or "").strip()
+    selected_mood = normalize_mood_override(mood_override)
+
+    if selected_voice_id.startswith("demo-") and not settings.demo_mode:
+        return error_response(
+            request_id,
+            400,
+            "demo_voice_id_selected",
+            "A demo voice ID is selected, but the backend is running in real mode. Clear the selected voice ID and paste or enroll a real ElevenLabs voice ID.",
+        )
 
     consent = guardrails.validate_consent(consent_confirmed)
     if not consent.allowed:
@@ -101,14 +133,14 @@ async def translate_voice(
             )
 
         voice_profile = analyzer.extract_features(audio_path, transcript.text)
-        if mood_override:
-            voice_profile.detected_mood = mood_override
+        if selected_mood:
+            voice_profile.detected_mood = selected_mood
             voice_profile.mood_confidence = max(voice_profile.mood_confidence, 0.75)
 
         translation = translation_provider.translate_to_hindi(
             transcript.text,
             voice_profile,
-            mood_override,
+            selected_mood,
         )
 
         pii = guardrails.check_pii(transcript.text)
@@ -127,10 +159,11 @@ async def translate_voice(
         tts = tts_provider.generate_speech(
             text=translation.hindi_translation,
             style_instructions=translation.tts_style_instructions,
-            voice_id=voice_id or settings.elevenlabs_voice_id,
+            voice_id=selected_voice_id,
             language_code="hi",
             voice_profile=voice_profile,
         )
+        VoiceProfileStore(settings.database_path).mark_used(selected_voice_id)
 
         return VoiceTranslationResponse(
             request_id=request_id,
@@ -157,3 +190,13 @@ async def translate_voice(
                 "or upload a WAV, MP3, M4A, or MP4 audio file."
             )
         return error_response(request_id, status_code, reason, message)
+
+
+def normalize_mood_override(mood_override: str | None) -> str | None:
+    if not mood_override:
+        return None
+    mood = mood_override.strip().lower().replace(" ", "_")
+    if mood in {"", "auto"}:
+        return None
+    mood = MOOD_ALIASES.get(mood, mood)
+    return mood if mood in SUPPORTED_MOODS else None

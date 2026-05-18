@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     enable_audio_watermark_disclosure: bool = True
 
     media_root: Path = Field(default=Path("media"))
+    database_path: Path = Field(default=Path("data/voice_translator.sqlite3"))
+    music_catalog_path: Path = Field(default=Path("data/music_catalog.json"))
+    auto_campaign_folder: Path = Field(default=Path("/Users/mohan/Downloads/pure-greens-media"))
 
     model_config = SettingsConfigDict(
         env_file=("../.env", ".env"),
@@ -43,4 +46,9 @@ def get_settings() -> Settings:
     settings.media_root.mkdir(parents=True, exist_ok=True)
     (settings.media_root / "uploads").mkdir(exist_ok=True)
     (settings.media_root / "generated").mkdir(exist_ok=True)
+    (settings.media_root / "music").mkdir(exist_ok=True)
+    (settings.media_root / "auto-campaign").mkdir(exist_ok=True)
+    settings.auto_campaign_folder.mkdir(parents=True, exist_ok=True)
+    settings.database_path.parent.mkdir(parents=True, exist_ok=True)
+    settings.music_catalog_path.parent.mkdir(parents=True, exist_ok=True)
     return settings

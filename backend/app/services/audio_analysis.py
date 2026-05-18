@@ -1,7 +1,120 @@
 from pathlib import Path
+import re
 
 from app.config import Settings
 from app.models import GuardrailResult, VoiceProfile
+
+
+TRANSCRIPT_MOOD_CUES: dict[str, tuple[str, ...]] = {
+    "urgent": (
+        "urgent",
+        "immediately",
+        "right now",
+        "as soon as possible",
+        "asap",
+        "emergency",
+        "quickly",
+        "hurry",
+        "critical",
+    ),
+    "angry": (
+        "angry",
+        "furious",
+        "mad",
+        "unacceptable",
+        "frustrated",
+        "outrageous",
+        "stop this",
+        "i can't believe",
+    ),
+    "sad": (
+        "sad",
+        "heartbroken",
+        "upset",
+        "sorry",
+        "lonely",
+        "grief",
+        "miss you",
+        "disappointed",
+        "devastated",
+    ),
+    "joyful": (
+        "joy",
+        "joyful",
+        "celebrate",
+        "celebrating",
+        "wonderful",
+        "fantastic",
+        "thrilled",
+        "delighted",
+    ),
+    "excited": (
+        "excited",
+        "amazing",
+        "awesome",
+        "can't wait",
+        "incredible",
+        "super excited",
+        "big news",
+    ),
+    "happy": (
+        "happy",
+        "glad",
+        "pleased",
+        "great",
+        "good news",
+        "thank you",
+        "love this",
+    ),
+    "calm": (
+        "calm",
+        "relax",
+        "slowly",
+        "peaceful",
+        "steady",
+        "take a breath",
+        "no rush",
+    ),
+    "serious": (
+        "serious",
+        "important",
+        "carefully",
+        "matter",
+        "consequences",
+        "responsibility",
+        "formal",
+    ),
+    "instructional": (
+        "first",
+        "next",
+        "then",
+        "step",
+        "follow",
+        "instructions",
+        "make sure",
+        "remember to",
+    ),
+    "educational": (
+        "explain",
+        "learn",
+        "understand",
+        "concept",
+        "example",
+        "lesson",
+        "because",
+        "means that",
+    ),
+    "persuasive": (
+        "believe",
+        "should",
+        "must",
+        "recommend",
+        "convince",
+        "trust me",
+        "the reason",
+        "best choice",
+    ),
+}
 
 
 class AudioAnalyzer:
@@ -73,7 +186,7 @@ class AudioAnalyzer:
         speech_rate = self._speech_rate(transcript, duration)
         intensity_variation = float(np.std(rms_frames))
 
-        mood, confidence = self._classify_mood(
+        acoustic_mood, acoustic_confidence = self._classify_mood(
             rms_energy=rms_energy,
             speech_rate=speech_rate or 0,
             pitch_range=pitch_range or 0,
@@ -82,6 +195,12 @@ class AudioAnalyzer:
             longest_pause=max(long_pauses, default=0),
             intensity_variation=intensity_variation,
         )
+        transcript_mood, transcript_confidence = self._classify_transcript_mood(transcript)
+        if transcript_confidence > acoustic_confidence + 0.08:
+            mood, confidence = transcript_mood, transcript_confidence
+        else:
+            mood, confidence = acoustic_mood, acoustic_confidence
+
         return VoiceProfile(
             duration_seconds=round(duration, 2),
             sample_rate=sr,
@@ -121,7 +240,7 @@ class AudioAnalyzer:
 
     def _fallback_profile(self, transcript: str) -> VoiceProfile:
         word_count = len(transcript.split())
-        mood = "excited" if any(word in transcript.lower() for word in ("excited", "amazing", "great")) else "normal"
+        mood, confidence = self._classify_transcript_mood(transcript)
         return VoiceProfile(
             duration_seconds=max(3.0, word_count / 2.5),
             speech_rate_wpm=140,
@@ -132,11 +251,48 @@ class AudioAnalyzer:
             average_pause_ms=0,
             longest_pause_ms=0,
             intensity_label="medium",
-            cadence_label="measured_and_explanatory",
-            tone_label="confident_educational" if mood == "normal" else "bright_enthusiastic",
+            cadence_label="measured_and_explanatory" if mood in {"educational", "instructional"} else "steady_conversational",
+            tone_label=self._tone_label(mood),
             detected_mood=mood,
-            mood_confidence=0.55,
+            mood_confidence=confidence,
         )
+
+    @staticmethod
+    def _classify_transcript_mood(transcript: str) -> tuple[str, float]:
+        text = f" {transcript.lower()} "
+        normalized = re.sub(r"[^a-z0-9' ]+", " ", text)
+        scores: dict[str, int] = {}
+        for mood, cues in TRANSCRIPT_MOOD_CUES.items():
+            score = 0
+            for cue in cues:
+                cue_text = cue.lower()
+                if " " in cue_text:
+                    if cue_text in normalized:
+                        score += 2
+                elif re.search(rf"\b{re.escape(cue_text)}\b", normalized):
+                    score += 1
+            if score:
+                scores[mood] = score
+
+        if not scores:
+            return "normal", 0.46
+
+        priority = [
+            "urgent",
+            "angry",
+            "sad",
+            "joyful",
+            "excited",
+            "happy",
+            "instructional",
+            "educational",
+            "persuasive",
+            "serious",
+            "calm",
+        ]
+        mood = max(scores, key=lambda item: (scores[item], -priority.index(item)))
+        confidence = min(0.82, 0.52 + scores[mood] * 0.08)
+        return mood, round(confidence, 2)
 
     @staticmethod
     def _speech_rate(transcript: str, duration: float) -> float | None:
@@ -178,10 +334,14 @@ class AudioAnalyzer:
             return "excited", 0.76
         if high_energy and fast and intensity_variation > 0.035:
             return "urgent", 0.7
+        if high_energy and wide_pitch and speech_rate > 135:
+            return "joyful", 0.68
         if low_energy and slow and long_pauses:
             return "sad", 0.68
         if low_energy and slow:
             return "calm", 0.62
+        if low_energy and long_pauses:
+            return "serious", 0.56
         if speech_rate and 100 <= speech_rate <= 150 and silence_ratio < 0.28:
             return "educational", 0.64
         if high_energy and wide_pitch:
