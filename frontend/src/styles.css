@@ -370,28 +370,57 @@ a.download:hover {
   padding: 12px;
 }
 
+.pipeline-panel {
+  min-height: 430px;
+  max-height: 80vh;
+  overflow: auto;
+  resize: vertical;
+}
+
+.pipeline-panel::after {
+  content: "Drag the lower-right corner to resize";
+  display: block;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .timeline {
   display: grid;
-  gap: 8px;
+  gap: 12px;
 }
 
 .timeline div {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-height: 54px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdfb;
   color: var(--muted);
+  font-weight: 750;
 }
 
 .timeline span {
-  width: 28px;
-  height: 28px;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   background: #eef3ef;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 850;
+}
+
+.timeline .active {
+  border-color: #e4c47d;
+  background: #fff8e8;
+  color: var(--ink);
 }
 
 .timeline .active span {
@@ -400,6 +429,8 @@ a.download:hover {
 }
 
 .timeline .done {
+  border-color: #badbc5;
+  background: #f0faf2;
   color: var(--ink);
 }
 

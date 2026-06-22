@@ -403,7 +403,7 @@ export default function App() {
 
         <aside className="preview-column">
           {(busy || campaign) && (
-            <section className="panel">
+            <section className="panel pipeline-panel">
               <div className="panel-head">
                 <h2>Production Pipeline</h2>
                 <span>{Math.min(activeStep, steps.length)}/{steps.length}</span>
