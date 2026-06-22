@@ -10,11 +10,13 @@ import {
   generateStoryboard,
   getHealth,
   mediaUrl,
+  polishNarration,
   renderCampaign,
   runCompliance,
   uploadAssets,
   type Campaign,
   type CampaignCreate,
+  type PolishNarrationResponse,
   type ProductFocus,
   type TargetAudience
 } from './api'
@@ -61,6 +63,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [folderPath, setFolderPath] = useState('/Users/mohan/Downloads/pure-greens-media')
   const [activeStep, setActiveStep] = useState(0)
+  const [roughNarrationIdea, setRoughNarrationIdea] = useState('')
+  const [polishedNarration, setPolishedNarration] = useState<PolishNarrationResponse | null>(null)
   const [form, setForm] = useState<CampaignCreate>({
     businessName: 'Pure Green',
     locationName: 'Irvine',
@@ -195,6 +199,33 @@ export default function App() {
     setActiveStep(0)
   }
 
+  async function polishRoughNarration() {
+    if (!roughNarrationIdea.trim()) {
+      setError('Write a rough narration idea first, then polish it.')
+      return
+    }
+    setBusy('Polishing narration')
+    setError(null)
+    try {
+      const polished = await polishNarration({
+        roughText: roughNarrationIdea,
+        businessName: form.businessName,
+        locationName: form.locationName,
+        neighborhood: form.neighborhood,
+        targetAudience: form.targetAudience,
+        productFocus: form.productFocus,
+        tone: form.tone,
+        cta: form.cta,
+        videoLengthSeconds: form.videoLengthSeconds
+      })
+      setPolishedNarration(polished)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not polish narration')
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <main className="shell">
       <header className="hero">
@@ -272,6 +303,45 @@ export default function App() {
               <input placeholder="Optional. Enter a voice ID to prioritize it." value={form.voiceId} onChange={(event) => update('voiceId', event.target.value)} />
               <span className="field-hint">Optional. If you leave this blank, the app chooses the best available voice for the campaign tone.</span>
             </label>
+            <div className="narration-polisher">
+              <label className="field">
+                Rough campaign idea
+                <textarea
+                  rows={5}
+                  placeholder="Write rough thoughts, favorite phrases, audience intent, or the feeling you want. Example: after yoga people should feel like Pure Green is the healthy local stop, fresh smoothies, not too salesy, upbeat."
+                  value={roughNarrationIdea}
+                  onChange={(event) => setRoughNarrationIdea(event.target.value)}
+                />
+                <span className="field-hint">ChatGPT turns this into polished ad narration. You can preview it, use it as-is, or edit it below.</span>
+              </label>
+              <button className="secondary" type="button" disabled={Boolean(busy)} onClick={polishRoughNarration}>
+                Polish with ChatGPT
+              </button>
+              {polishedNarration && (
+                <div className="polished-card">
+                  <div className="polished-card-head">
+                    <strong>Polished narration preview</strong>
+                    <span>{polishedNarration.provider === 'openai' ? 'ChatGPT' : 'Demo polish'}</span>
+                  </div>
+                  <p>{polishedNarration.polishedNarration}</p>
+                  {polishedNarration.onScreenText.length > 0 && (
+                    <div className="screen-lines">
+                      {polishedNarration.onScreenText.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </div>
+                  )}
+                  <em>{polishedNarration.rationale}</em>
+                  <button
+                    className="secondary"
+                    type="button"
+                    onClick={() => update('narrationScript', polishedNarration.polishedNarration)}
+                  >
+                    Use this narration
+                  </button>
+                </div>
+              )}
+            </div>
             <label className="field">
               Narration text
               <textarea

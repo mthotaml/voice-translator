@@ -38,6 +38,26 @@ export type AutoCampaignCreate = CampaignCreate & {
   folderPath?: string
 }
 
+export type PolishNarrationRequest = {
+  roughText: string
+  businessName: string
+  locationName?: string
+  neighborhood?: string
+  targetAudience: TargetAudience[]
+  productFocus: ProductFocus[]
+  tone: CampaignCreate['tone']
+  cta?: string
+  videoLengthSeconds: CampaignCreate['videoLengthSeconds']
+}
+
+export type PolishNarrationResponse = {
+  polishedNarration: string
+  hook: string
+  onScreenText: string[]
+  rationale: string
+  provider: string
+}
+
 export type MediaAnalysis = {
   detectedObjects: string[]
   detectedFoods: string[]
@@ -261,6 +281,17 @@ export async function createAutoCampaignFromFolder(payload: AutoCampaignCreate):
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
   })
+}
+
+export async function polishNarration(payload: PolishNarrationRequest): Promise<PolishNarrationResponse> {
+  const response = await fetch(`${API_BASE}/api/campaigns/polish-narration`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  const data = await response.json()
+  if (!response.ok) throw new Error(data?.detail || data?.message || 'Could not polish narration')
+  return data
 }
 
 export async function uploadAssets(campaignId: string, files: File[]): Promise<Campaign> {

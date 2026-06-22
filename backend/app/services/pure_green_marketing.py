@@ -12,6 +12,8 @@ from app.models import (
     Caption,
     ComplianceResult,
     MediaAnalysis,
+    PolishNarrationRequest,
+    PolishNarrationResponse,
     Scene,
     SocialCaption,
     Storyboard,
@@ -283,6 +285,105 @@ def run_compliance(script: str, captions: list[str]) -> ComplianceResult:
         rewrittenCaptions=clean_captions,
         notes=["Approved for lifestyle-oriented wellness language."],
     )
+
+
+def polish_campaign_narration(payload: PolishNarrationRequest, settings: Settings) -> PolishNarrationResponse:
+    rough = payload.roughText.strip()
+    if not rough:
+        raise ValueError("Enter a rough campaign idea before polishing narration.")
+
+    if settings.demo_mode or not settings.openai_api_key:
+        return _demo_polished_narration(payload)
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=settings.openai_api_key)
+        response = client.chat.completions.create(
+            model=settings.openai_translation_model,
+            temperature=0.55,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a senior local wellness advertising copywriter. "
+                        "Turn rough user intent into polished short-form video narration. "
+                        "Avoid unsupported medical, disease, immunity, longevity, recovery guarantee, organic, non-GMO, and zero-sugar claims. "
+                        "Return only JSON with polishedNarration, hook, onScreenText, rationale."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "rough_user_words": rough,
+                            "business": payload.businessName,
+                            "location": payload.locationName,
+                            "neighborhood": payload.neighborhood,
+                            "audience": [_audience_label(item) for item in payload.targetAudience],
+                            "products": [_product_label(item) for item in payload.productFocus],
+                            "tone": payload.tone,
+                            "cta": payload.cta,
+                            "video_length_seconds": payload.videoLengthSeconds,
+                            "requirements": [
+                                "Make it sound polished, local, and campaign-ready.",
+                                "Use natural voiceover language, not corporate copy.",
+                                "Keep it concise enough for the selected video length.",
+                                "Preserve the user's intent and favorite words where safe.",
+                                "Use lifestyle wellness language, not medical claims.",
+                            ],
+                        },
+                        ensure_ascii=False,
+                    ),
+                },
+            ],
+        )
+        data = json.loads(response.choices[0].message.content or "{}")
+        polished = str(data.get("polishedNarration") or data.get("polished_narration") or "").strip()
+        hook = str(data.get("hook") or "").strip()
+        on_screen = data.get("onScreenText") or data.get("on_screen_text") or []
+        rationale = str(data.get("rationale") or "Polished for a local wellness video campaign.").strip()
+        if not polished:
+            return _demo_polished_narration(payload)
+        clean = run_compliance(polished, [str(item) for item in on_screen if str(item).strip()])
+        return PolishNarrationResponse(
+            polishedNarration=clean.rewrittenScript,
+            hook=hook or _split_narration_text(clean.rewrittenScript)[0],
+            onScreenText=clean.rewrittenCaptions[:5],
+            rationale=rationale,
+            provider="openai",
+        )
+    except Exception:
+        return _demo_polished_narration(payload)
+
+
+def _demo_polished_narration(payload: PolishNarrationRequest) -> PolishNarrationResponse:
+    location = payload.neighborhood or payload.locationName or "your neighborhood"
+    products = ", ".join(_product_label(item) for item in payload.productFocus[:3]) or "smoothies, bowls, and cold-pressed juices"
+    audience = ", ".join(_audience_label(item) for item in payload.targetAudience[:2]) or "active locals"
+    cta = payload.cta or f"Stop by {payload.businessName} and make your next healthy choice local."
+    hook = "Your next healthy stop is closer than you think."
+    narration = (
+        f"{hook} After the workout, the class, the run, or the long day, {payload.businessName} brings {products} "
+        f"to {audience} around {location}. Fresh ingredients, bright flavor, and choices that fit an active routine. {cta}"
+    )
+    clean = run_compliance(narration, [hook, "Fresh local fuel", "Made for active routines", cta])
+    return PolishNarrationResponse(
+        polishedNarration=clean.rewrittenScript,
+        hook=hook,
+        onScreenText=clean.rewrittenCaptions,
+        rationale="Demo polish used a safe local wellness structure: hook, lifestyle moment, product proof, and CTA.",
+        provider="demo",
+    )
+
+
+def _audience_label(value: str) -> str:
+    return AUDIENCE_LABELS.get(value, value.replace("_", " "))
+
+
+def _product_label(value: str) -> str:
+    return PRODUCT_LABELS.get(value, value.replace("_", " "))
 
 
 def generate_social_caption(campaign: Campaign, storyboard: Storyboard) -> SocialCaption:

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from app.config import Settings, get_settings
-from app.models import AutoCampaignCreate, Campaign, CampaignAsset, CampaignCreate
+from app.models import AutoCampaignCreate, Campaign, CampaignAsset, CampaignCreate, PolishNarrationRequest
 from app.services.campaign_store import campaign_store
 from app.services.pure_green_marketing import (
     analyze_campaign_assets,
@@ -16,6 +16,7 @@ from app.services.pure_green_marketing import (
     inspect_media_dimensions,
     generate_campaign_brief,
     generate_narration,
+    polish_campaign_narration,
     generate_social_caption,
     generate_storyboard,
     render_manifest,
@@ -44,6 +45,14 @@ def list_campaigns():
 @router.post("")
 def create_campaign(payload: CampaignCreate):
     return campaign_store.create(payload)
+
+
+@router.post("/polish-narration")
+def polish_narration(payload: PolishNarrationRequest, settings: Settings = Depends(get_settings)):
+    try:
+        return polish_campaign_narration(payload, settings)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/auto-folder")

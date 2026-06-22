@@ -507,6 +507,66 @@ a.download:hover {
   margin: 0 0 6px;
 }
 
+.narration-polisher {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #cfe4d4;
+  border-radius: 8px;
+  background: #f7fcf6;
+}
+
+.polished-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #bfd8c7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.polished-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.polished-card-head span {
+  border-radius: 999px;
+  background: #e7f6e9;
+  color: var(--green-dark);
+  padding: 6px 9px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.polished-card p {
+  color: var(--ink);
+  line-height: 1.58;
+}
+
+.polished-card em {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.screen-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.screen-lines span {
+  border-radius: 999px;
+  background: #eef5f0;
+  color: #3f5848;
+  padding: 7px 9px;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
 .scenes article {
   display: grid;
   gap: 5px;

@@ -118,6 +118,26 @@ class CampaignCreate(BaseModel):
     narrationScript: str | None = None
 
 
+class PolishNarrationRequest(BaseModel):
+    roughText: str
+    businessName: str = "Pure Green"
+    locationName: str | None = None
+    neighborhood: str | None = None
+    targetAudience: list[TargetAudience] = Field(default_factory=list)
+    productFocus: list[ProductFocus] = Field(default_factory=list)
+    tone: CampaignTone = "energetic"
+    cta: str | None = None
+    videoLengthSeconds: int = 30
+
+
+class PolishNarrationResponse(BaseModel):
+    polishedNarration: str
+    hook: str
+    onScreenText: list[str] = Field(default_factory=list)
+    rationale: str
+    provider: str = "demo"
+
+
 class AutoCampaignCreate(CampaignCreate):
     folderPath: str | None = None
 
