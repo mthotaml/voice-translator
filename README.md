@@ -4,6 +4,15 @@ This repository now includes a working mock-first MVP for the **Pure Green Hyper
 
 The app lets a local wellness brand create a campaign, upload store/neighborhood/product media, generate deterministic media analysis, produce a campaign brief, storyboard, captions, CTA, compliance-safe script, demo narration, social caption, and a downloadable render package. The current renderer is a placeholder manifest designed to be swapped for Remotion MP4 rendering.
 
+## Pure Green Demo Materials
+
+- Product/demo PDF: [`docs/pure-greens-demo.pdf`](docs/pure-greens-demo.pdf)
+- Demo 1: [Loom walkthrough](https://www.loom.com/share/0624ac793cd34754b15c75c4eb6bcfc7)
+- Demo 2: [Loom walkthrough](https://www.loom.com/share/fe8391e730394a34987ca36ea9819ee8)
+- Final Marketing Ad: [YouTube video](https://www.youtube.com/watch?v=PIO--q9qNJ0)
+
+These assets document the Pure Green MVP experience: rough campaign intent, AI-polished narration, local media selection, storyboard/compliance generation, narration, render preview, and the final marketing output.
+
 ## Pure Green MVP Flow
 
 ```text
