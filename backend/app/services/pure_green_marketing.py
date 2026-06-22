@@ -343,6 +343,10 @@ def polish_campaign_narration(payload: PolishNarrationRequest, settings: Setting
         polished = str(data.get("polishedNarration") or data.get("polished_narration") or "").strip()
         hook = str(data.get("hook") or "").strip()
         on_screen = data.get("onScreenText") or data.get("on_screen_text") or []
+        if isinstance(on_screen, str):
+            on_screen = _split_narration_text(on_screen)
+        if not isinstance(on_screen, list):
+            on_screen = []
         rationale = str(data.get("rationale") or "Polished for a local wellness video campaign.").strip()
         if not polished:
             return _demo_polished_narration(payload)
