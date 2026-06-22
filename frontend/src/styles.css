@@ -352,13 +352,36 @@ a.download:hover {
 .result-panel {
   display: grid;
   gap: 12px;
+  min-height: 760px;
+  max-height: 92vh;
+  overflow: auto;
+  resize: vertical;
+}
+
+.generated-frame-shell {
+  min-height: 660px;
+  height: min(78vh, 920px);
+  overflow: auto;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.generated-frame-shell::after {
+  content: "Drag the lower-right corner to make this preview taller";
+  display: block;
+  padding: 8px 10px 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .result-panel iframe {
   width: 100%;
-  min-height: 420px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  height: calc(100% - 34px);
+  min-height: 620px;
+  border: 0;
   background: #fff;
 }
 

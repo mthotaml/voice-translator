@@ -435,9 +435,14 @@ export default function App() {
 
           {campaign?.renderUrl && (
             <section className="panel result-panel">
-              <h2>Generated Video</h2>
-              <p>Your campaign preview is ready. Follow the steps below to choose music, generate the video, and download it.</p>
-              <iframe title="Generated campaign preview" src={downloadLink} />
+              <div className="panel-head">
+                <h2>Generated Video</h2>
+                <span>Resizable</span>
+              </div>
+              <p>Your campaign preview is ready. Drag the lower-right corner of this preview area larger if you want to see more of the steps at once.</p>
+              <div className="generated-frame-shell">
+                <iframe title="Generated campaign preview" src={downloadLink} />
+              </div>
             </section>
           )}
         </aside>
